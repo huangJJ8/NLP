@@ -19,7 +19,6 @@ label:
 
 
 type: str/int
-每个句子对应的label，目前只支持编码后的label. 暂不支持文本类型的label.可以设置多列label,比如说：“location_traffic_convenience”，“location_easy_to_find”等。
+每个句子对应的label，目前只支持编码后的label. 暂不支持文本类型的label.
 label的数值样例：“0，1，2，3，4”。
-注意：如果设置多个label，保证多列label的数值分类一致，例如均分为：0,1,2,3 四类。
 若label格式为 ”财经， 综艺， 军事“ 等文本类型，需预先将其转化为数字编码.
