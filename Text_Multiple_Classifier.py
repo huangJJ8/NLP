@@ -283,7 +283,7 @@ class Multiple_text_Classifier(LComponent):
         print("predicted", results.predicted[0])
         print("actual", results.actual)
 
-        results.learner_names = ['Text_Multiple_Classifier']
+        results.learner_names = ['Multiple_text_Classifier']
         # self.send("Predictions", predictions)
         self.send("Evaluation Results", results)
 
