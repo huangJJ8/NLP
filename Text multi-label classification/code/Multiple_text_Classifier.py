@@ -174,7 +174,6 @@ class Multiple_text_Classifier(LComponent):
         self.get_name()
         
         test_data = table2df(self.test_data) 
-        test_data = self.add_commentid(test_data)
        
 #         try:
 #             test_data.iloc[:, :-len(self.test_data.domain.class_vars)] = \
@@ -183,6 +182,9 @@ class Multiple_text_Classifier(LComponent):
 #             print(e)
 #             raise Error('data must be numeric')
         test_data = test_data.dropna(subset=[self.label_name])
+        test_data, test_label_domain = self.label_str2number(test_data)
+        test_data = self.add_commentid(test_data)
+
         if len(test_data) != len(self.test_data):
             raise Error("test data missing label")
        
@@ -200,7 +202,7 @@ class Multiple_text_Classifier(LComponent):
             raise Error('train data and test data must match')
         train_data = train_data.dropna(subset=[self.label_name])              
         train_data, self.label_domain = self.label_str2number(train_data)
-       # print("self.label_domain",self.label_domain)
+#         print("self.label_domain",self.label_domain)
         Traina,validationa = train_test_split(train_data, train_size = 0.8, random_state=1234) 
         Traina = self.add_commentid(Traina)
         validationa = self.add_commentid(validationa)
@@ -223,9 +225,9 @@ class Multiple_text_Classifier(LComponent):
         int_index = []
         for index in predict_label:
             int_index.append(int(index[0]))
-#        print(int_index)      
-#        print("type(predict_label):",type(predict_label))
-#        print("predict_label:",predict_label)
+#         print(int_index)      
+#         print("type(predict_label):",type(predict_label))
+#         print("predict_label:",predict_label)
          
         test_set1 = open('fasttext_test_split.txt','r',encoding='utf-8-sig')
         wind_pre_prob=self.classifier.predict_proba(test_set1)
@@ -234,8 +236,8 @@ class Multiple_text_Classifier(LComponent):
             wind_pre_prob_index.append(index[0][1])
 #         print('wind_pre_prob_index',wind_pre_prob_index)
 #         print("wind_pre_prob:",wind_pre_prob)
-        Y_pred_labels = list(map(lambda x: self.label_domain[x],int_index))
-#        print("Y_pred_labels",Y_pred_labels)
+#         Y_pred_labels = list(map(lambda x: self.label_domain[x],int_index))
+#         print("Y_pred_labels",Y_pred_labels)
         
         """-----------calculate probility-------------------------------"""
 
@@ -253,13 +255,14 @@ class Multiple_text_Classifier(LComponent):
         wind_pre_prob = np.array([np.array(new_two_prob_negative), np.array(new_two_prob_positive)])
         wind_pre_prob = wind_pre_prob.T
         total_pre_prob = self.merge_possibility(len(test_data_raw), wind_pre_prob, legal_test_data_id)
-        cols = [np.array(Y_pred_labels).reshape(-1,1), wind_pre_prob]
-#        aa=np.array(Y_pred_labels).reshape(-1, 1)
-#        print(aa.shape)
-#        print(wind_pre_prob.shape)
+        cols = [np.array(int_index).reshape(-1,1), wind_pre_prob]
+        aa=np.array(int_index).reshape(-1, 1)
+#         print(aa.shape)
+#         print(wind_pre_prob.shape)
          
-        tbl = np.column_stack((np.array(Y_pred_labels).reshape(-1, 1), wind_pre_prob))
-
+        tbl = np.column_stack((np.array(int_index).reshape(-1, 1), wind_pre_prob))
+#         print("tbl:",tbl)
+#         print("Domain(metas)",Domain(metas))
         res = Table.from_numpy(Domain(metas), tbl)
         final_result = self.merge_data(self.test_data,res)
         
@@ -270,10 +273,10 @@ class Multiple_text_Classifier(LComponent):
         results.folds = None
         results.row_indices = np.arange(N)
         results.actual = np.array(y_test_visual[legal_test_data_id])
-        results.predicted = np.array([Y_pred_labels])
+        results.predicted = np.array([int_index])
 #       results.predicted = results.predicted[np.newaxis,: ]
-#        print('results.predicted',results.predicted.shape)
-#        print('results.actual',results.actual.shape)
+#         print('results.predicted',results.predicted.shape)
+#         print('results.actual',results.actual.shape)
         results.probabilities = np.array([wind_pre_prob])  
         # results.probabilities = wind_pre_prob
 
@@ -295,8 +298,8 @@ class Multiple_text_Classifier(LComponent):
         self.send("Metric", MetricType.ACCURACY)
 
         # print(MetricType.ACCURACY)
-        print("metric_frame",metric_frame)
-        print("result:",results.predicted, results.predicted.shape)        
+#         print("metric_frame",metric_frame)
+#         print("result:",results.predicted, results.predicted.shape)        
          
         self.send('News', final_result)
         self.remove_files('.', 'fasttext_*.txt', show = True)
@@ -320,18 +323,18 @@ class Multiple_text_Classifier(LComponent):
         int_index = []
         for index in predict_label:
             int_index.append(int(index[0]))
-#        print(int_index)      
-#        print("type(predict_label)1:",type(predict_label))
-#        print("predict_label1:",predict_label)
-       
+#         print(int_index)      
+#         print("type(predict_label)1:",type(predict_label))
+#         print("predict_label1:",predict_label)
+         
         test_set1 = open('fasttext_test_split.txt','r',encoding='utf-8-sig')
         wind_pre_prob=self.classifier.predict_proba(test_set1)
         wind_pre_prob_index = []
         for index in wind_pre_prob:
             wind_pre_prob_index.append(index[0][1])
-#        print('wind_pre_prob_index1',wind_pre_prob_index)
-#        print("wind_pre_prob1:",wind_pre_prob)
-        Y_pred_labels = list(map(lambda x: self.label_domain[x],int_index))
+#         print('wind_pre_prob_index1',wind_pre_prob_index)
+#         print("wind_pre_prob1:",wind_pre_prob)
+#         Y_pred_labels = list(map(lambda x: self.label_domain[x],int_index))
 
         """-----------calculate probility-------------------------------"""
 
@@ -349,12 +352,12 @@ class Multiple_text_Classifier(LComponent):
         wind_pre_prob = np.array([np.array(new_two_prob_negative), np.array(new_two_prob_positive)])
         wind_pre_prob = wind_pre_prob.T
         total_pre_prob = self.merge_possibility(len(test_data_raw), wind_pre_prob, legal_test_data_id)
-        cols = [np.array(Y_pred_labels).reshape(-1,1), wind_pre_prob]
-#        aa=np.array(Y_pred_labels).reshape(-1, 1)
-#        print(aa.shape)
-#        print(wind_pre_prob.shape)
+        cols = [np.array(int_index).reshape(-1,1), wind_pre_prob]
+        aa=np.array(int_index).reshape(-1, 1)
+#         print(aa.shape)
+#         print(wind_pre_prob.shape)
          
-        tbl = np.column_stack((np.array(Y_pred_labels).reshape(-1, 1), wind_pre_prob))
+        tbl = np.column_stack((np.array(int_index).reshape(-1, 1), wind_pre_prob))
 
         res = Table.from_numpy(Domain(metas), tbl)
         final_result = self.merge_data(self.test_data,res)
@@ -365,5 +368,4 @@ class Multiple_text_Classifier(LComponent):
         self.send("Columns", cols)
         print('rerun')
         self.remove_files('.', 'fasttext_*.txt', show = True)
-                          
 
