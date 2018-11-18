@@ -5,15 +5,15 @@ solution = Solution()
 
 params = {
     'train input':{
-        'datapath': 'fasttext_training_1115.csv',
+        'datapath': 'fasttext_training.csv',
         'label': 'label'
     },
     'test input':{
-        'datapath': 'fasttext_test_1115.csv',
+        'datapath': 'fasttext_test.csv',
         'label': 'label'
     },
     'test input1':{
-        'datapath': 'fasttext_test_1114.csv'
+        'datapath': 'fasttext_test_unlabel.csv'
         'label': 'label'
     },
     'algorithm':{
