@@ -12,6 +12,10 @@ params = {
         'datapath': 'fasttext_test_1115.csv',
         'label': 'label'
     },
+    'test input1':{
+        'datapath': 'fasttext_test_1114.csv'
+        'label': 'label'
+    },
     'algorithm':{
 
     },
