@@ -14,7 +14,6 @@ params = {
     },
     'test input1':{
         'datapath': 'fasttext_test_unlabel.csv'
-        'label': 'label'
     },
     'algorithm':{
 
