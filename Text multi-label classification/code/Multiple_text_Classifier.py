@@ -18,6 +18,7 @@ from mlstudiosdk.modules.algo.data.variable import DiscreteVariable, ContinuousV
 from mlstudiosdk.modules.utils.itemlist import MetricFrame
 from mlstudiosdk.modules.utils.metricType import MetricType
 from sklearn.model_selection import train_test_split
+from mlstudiosdk.exceptions.exception_base import Error
 import itertools
 import jieba
 import os
@@ -34,8 +35,7 @@ class Multiple_text_Classifier(LComponent):
     name = "Multiple_text_Classifier"
     
     inputs = [("Train Data", mlstudiosdk.modules.algo.data.Table, "set_traindata"),
-              ("Test Data", mlstudiosdk.modules.algo.data.Table, "set_testdata"),
-              ("Test Data1", mlstudiosdk.modules.algo.data.Table, "set_testdata1")
+              ("Test Data", mlstudiosdk.modules.algo.data.Table, "set_testdata")
              ]
     outputs = [
                ("News", mlstudiosdk.modules.algo.data.Table),               
@@ -59,10 +59,6 @@ class Multiple_text_Classifier(LComponent):
 
     def set_testdata(self, data):
         self.test_data = data
-
-    def set_testdata1(self, data):
-        self.test_data1 = data
-
 
     def label_str2number(self,data):
         label_str_raw = list(set(data[self.label_name]))
@@ -302,11 +298,9 @@ class Multiple_text_Classifier(LComponent):
 
 
     def rerun(self):
-        test_data = table2df(self.test_data1)
+        test_data = table2df(self.test_data)
         test_data = self.add_commentid(test_data)
 #         test_data = test_data.dropna(subset=[self.label_name])
-        if len(test_data) != len(self.test_data1):
-            raise Error("test data missing label")
         text_split=test_data
         test_data_raw = test_data # test data may delete some records
 #         text_split= test_data.drop([self.label_name], axis=1)
@@ -351,7 +345,7 @@ class Multiple_text_Classifier(LComponent):
         tbl = np.column_stack((np.array(int_index).reshape(-1, 1), wind_pre_prob))
 
         res = Table.from_numpy(Domain(metas), tbl)
-        final_result = self.merge_data(self.test_data1,res)
+        final_result = self.merge_data(self.test_data,res)
         
         self.send("News", final_result)
         self.send("Metric Score", None)
