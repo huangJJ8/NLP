@@ -18,18 +18,15 @@ class Solution(SolutionBase):
         # self.myscheme.new_link(cnn,'Data_OUT',writer,'Data')
 
         reader1 = self.myscheme.new_node("mlstudiosdk.modules.components.io.reader.Reader")
-        reader1.set_title("train input")
+        reader1.set_title("train_input")
         reader2 = self.myscheme.new_node("mlstudiosdk.modules.components.io.reader.Reader")
-        reader2.set_title("test input")
- 
-        reader3 = self.myscheme.new_node("mlstudiosdk.modules.components.io.reader.Reader")
-        reader3.set_title("test input1")
+        reader2.set_title("test_input")
     
         # impute = self.myscheme.new_node("mlstudiosdk.modules.components.preprocess.impute.Impute")
         # impute.set_title("impute")
         # impute.set_default_method(2)
         Multiple_text_Classifier = self.myscheme.new_node('Multiple_text_Classifier.Multiple_text_Classifier')
-        Multiple_text_Classifier.set_title('algorithm')
+        Multiple_text_Classifier.set_title('fasttext')
         outputwriter = self.myscheme.new_node("mlstudiosdk.modules.components.io.writer.Writer")
         outputwriter.set_title("output")
         eva_visualization = self.myscheme.new_node(
@@ -57,5 +54,4 @@ class Solution(SolutionBase):
         # self.myscheme.new_link(impute, "Test Data", Multiple_text_Classifier, "Test Data")
         self.myscheme.new_link(reader1, "Data", Multiple_text_Classifier, "Train Data")
         self.myscheme.new_link(reader2, "Data", Multiple_text_Classifier, "Test Data")
-        self.myscheme.new_link(reader3, "Data", Multiple_text_Classifier, "Test Data1")        
         self.myscheme.new_link(Multiple_text_Classifier, "News", outputwriter, "Data")
