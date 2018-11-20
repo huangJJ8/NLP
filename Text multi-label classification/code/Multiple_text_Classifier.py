@@ -20,6 +20,9 @@ from mlstudiosdk.modules.utils.metricType import MetricType
 from sklearn.model_selection import train_test_split
 from mlstudiosdk.exceptions.exception_base import Error
 import itertools
+import random
+import string
+import shutil
 import jieba
 import os
 import glob #find file directories and files
@@ -54,7 +57,8 @@ class Multiple_text_Classifier(LComponent):
         super().__init__()
         self.train_data = None
         self.test_data = None
-        self.file_path=os.path.join(os.getcwd(),'file')
+        self.file_path=None
+
     
     def set_traindata(self, data):
         self.train_data = data
@@ -62,9 +66,13 @@ class Multiple_text_Classifier(LComponent):
     def set_testdata(self, data):
         self.test_data = data
     
-    def set_file_path(self, file_path):   
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)  
+    def set_file_path(self):   
+        ran_str = ''.join(random.sample(string.ascii_letters + string.digits, random.randint(5, 12)))
+        self.file_path=os.path.join(os.getcwd(),ran_str)
+        while os.path.exists(self.file_path):
+            ran_str = ''.join(random.sample(string.ascii_letters + string.digits, random.randint(5, 12)))
+            self.file_path=os.path.join(os.getcwd(),ran_str) 
+        os.makedirs(self.file_path) 
 
     def label_str2number(self,data):
         label_str_raw = list(set(data[self.label_name]))
@@ -100,6 +108,7 @@ class Multiple_text_Classifier(LComponent):
              #if show:
                 #print('如下文件已被删除:',i)
             os.remove(i)
+               
             
     def get_name(self):
         # get label & sentence columns name
@@ -179,7 +188,7 @@ class Multiple_text_Classifier(LComponent):
             
     def run(self):
         self.get_name()
-        self.set_file_path(self.file_path)
+        self.set_file_path()
         test_data = table2df(self.test_data) 
        
 #         try:
@@ -220,14 +229,14 @@ class Multiple_text_Classifier(LComponent):
         self.text_split(test_split,'test_split')
         self.text_split(validationa,'validationset')       
         #training the model
-        self.classifier=fasttext.supervised(self.file_path+'/fasttext_trainingset.txt','fasttext_test.model',label_prefix='__label__',
+        self.classifier=fasttext.supervised(self.file_path+'/fasttext_trainingset.txt',self.file_path+'/fasttext_test.model',label_prefix='__label__',
                                         thread=32,epoch=50,lr=0.1,dim=200,bucket=5000000)
       
         train_result=self.classifier.test(self.file_path+'/fasttext_trainingset.txt')
         train_score=train_result.precision
         validation_result=self.classifier.test(self.file_path+'/fasttext_validationset.txt')    
         val_score=validation_result.precision
-        test_set = open(self.file_path+'/fasttext_test_split.txt','r',encoding='utf-8-sig')
+        test_set = open(self.file_path+'/fasttext_test_split.txt','r',encoding='utf-8-sig') 
         predict_label =self.classifier.predict(test_set)    
         int_index = []
         for index in predict_label:
@@ -301,10 +310,10 @@ class Multiple_text_Classifier(LComponent):
          
         self.send('News', final_result)
         self.remove_files(self.file_path, 'fasttext_*.txt', show = True)
-
+        test_set.close()
+        test_set1.close() 
 
     def rerun(self):
-        self.set_file_path(self.file_path)
         test_data = table2df(self.test_data)
         test_data = self.add_commentid(test_data)
 #         test_data = test_data.dropna(subset=[self.label_name])
@@ -357,9 +366,13 @@ class Multiple_text_Classifier(LComponent):
         self.send("News", final_result)
         self.send("Metric Score", None)
         self.send("Metas", metas)
-        self.send("Columns", cols)
-        print('rerun')
-        self.remove_files(self.file_path, 'fasttext_*.txt', show = True)
+        self.send("Columns", cols)      
+        self.remove_files(self.file_path, '*', show = True)
+        print('rerun')       
+        test_set.close()
+        test_set1.close() 
+        shutil.rmtree(self.file_path)
+        
                           
 
 
