@@ -230,7 +230,7 @@ class Multiple_text_Classifier(LComponent):
         self.text_split(validationa,'validationset')       
         #training the model
         self.classifier=fasttext.supervised(self.file_path+'/fasttext_trainingset.txt',self.file_path+'/fasttext_test.model',label_prefix='__label__',
-                                        epoch=400,min_count=3,word_ngrams=3,bucket=1,ws=15)
+                                       epoch=200,min_count=3,word_ngrams=3,bucket=1,ws=15)
       
         train_result=self.classifier.test(self.file_path+'/fasttext_trainingset.txt')
         train_score=train_result.precision
