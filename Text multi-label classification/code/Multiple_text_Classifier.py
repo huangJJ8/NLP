@@ -20,6 +20,7 @@ from mlstudiosdk.modules.utils.metricType import MetricType
 from sklearn.model_selection import train_test_split
 from mlstudiosdk.exceptions.exception_base import Error
 import itertools
+import tempfile
 import random
 import string
 import shutil
@@ -78,10 +79,11 @@ class Multiple_text_Classifier(LComponent):
         self.test_data = data
 
     def set_file_path(self):
-        ran_str = ''.join(random.sample(string.ascii_letters + string.digits, random.randint(5, 12)))
+        #ran_str = ''.join(random.sample(string.ascii_letters + string.digits, random.randint(5, 12)))
         # self.file_path = os.path.join(os.getcwd(), ran_str)
         self.model_path=os.path.join(self.root_path, ran_str)
-        self.file_path = os.path.join(self.model_path, "work_space")
+        #self.file_path = os.path.join(self.model_path, "work_space")
+        self.file_path=self.model_path
 
         # for one solution we only need one work-space
         # while os.path.exists(self.file_path):
@@ -206,6 +208,8 @@ class Multiple_text_Classifier(LComponent):
     def run(self):
         # os.chdir(self.root_path)
         self.get_name()
+        if self.model_path is not None:
+            shutil.rmtree(self.model_path)
         self.set_file_path()
         test_data = table2df(self.test_data)
 
