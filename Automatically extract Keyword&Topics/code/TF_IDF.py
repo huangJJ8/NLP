@@ -26,6 +26,7 @@ class TF_IDF():
                 word_dict[word.word] = 1
             else:
                 word_dict[word.word] += 1
+#         print('word_dict:',word_dict)
         count_total = sum(word_dict.values())
         for word, word_count in word_dict.items():
             if word in candi_words:
@@ -33,11 +34,11 @@ class TF_IDF():
             else:
                 continue
 
-        return candi_dict
+        return word_dict,candi_dict
 
     def extract_keywords(self, text, num_keywords):
         keywords_dict = {}
-        candi_dict = self.build_wordsdict(text)
+        word_dict,candi_dict = self.build_wordsdict(text)
         for word, word_tf in candi_dict.items():
             word_idf = self.idf_dict.get(word, self.common_idf)
             word_tfidf = word_idf * word_tf
