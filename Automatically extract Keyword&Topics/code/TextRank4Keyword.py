@@ -1,154 +1,140 @@
-from __future__ import print_function
-import mlstudiosdk.modules
-import mlstudiosdk.solution_gallery
-from mlstudiosdk.modules.components.component import LComponent
-from mlstudiosdk.modules.components.settings import Setting
-from mlstudiosdk.modules.components.utils.orange_table_2_data_frame import table2df
-from mlstudiosdk.modules.components.utils.orange_table_2_data_frame import df2table
-from mlstudiosdk.modules.algo.data import Domain, Table
-from mlstudiosdk.modules.algo.evaluation import Results
-from mlstudiosdk.modules.algo.data.variable import DiscreteVariable, ContinuousVariable
-from mlstudiosdk.modules.utils.itemlist import MetricFrame
-from mlstudiosdk.modules.utils.metricType import MetricType
-from sklearn.model_selection import train_test_split
-from mlstudiosdk.exceptions.exception_base import Error
-from TextRank4Keyword import TextRank4Keyword
-from TF_IDF import TF_IDF
-import numpy as np  # linear algebra
-import pandas as pd  # data processing, CSV file I/O (e.g. pd.read_csv)
-import itertools
-import tempfile
-import random
-import string
-import shutil
-import jieba
-import jieba.posseg as pseg
-import glob  # find file directories and files
-import codecs
-import csv
-import re
-import os
-import warnings
-warnings.filterwarnings('ignore')
-import sys
-try:
-    reload(sys)
-    sys.setdefaultencoding('utf-8')
-except:
-    pass
+#-*- encoding:utf-8 -*-
+"""
+@author:   letian
+@homepage: http://www.letiantian.me
+@github:   https://github.com/someus/
+"""
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
+import networkx as nx
+import numpy as np
 
+import util
+from Segmentation import Segmentation
 
-class Text_Extract_Keywords(LComponent):
-    category = 'Nature Language Processing'
-    name = "Text Extract Keywords"
-    title = "Text Extract Keywords"
-  
-    inputs = [("Train Data", mlstudiosdk.modules.algo.data.Table, "set_traindata")
-              ]
+class TextRank4Keyword(object):
     
-    outputs = [
-        ("News", mlstudiosdk.modules.algo.data.Table),
-        ("Predictions", Table),
-        ("Evaluation Results", mlstudiosdk.modules.algo.evaluation.Results),
-        ("Columns", list),
-        ("Metas", list),
-        ("Metric Score", MetricFrame),
-        ("Metric", MetricType)
-    ]
-
-    def __init__(self):
-        super().__init__()
-        self.train_data = None
-        self.keywords_num=5
-          
-    def set_traindata(self, data):
-        self.train_data = data
-
-    def get_keywords_num(self):
-        # get keywords_num 
-        key_dict = Setting("keywords_num", {"type": "int", "enum": [2, 3, 4, 5,6]})
-        self.keywords_num=key_dict.constraints['enum'][3]
+    def __init__(self, stop_words_file = None, 
+                 allow_speech_tags = util.allow_speech_tags, 
+                 delimiters = util.sentence_delimiters):
+        """
+        Keyword arguments:
+        stop_words_file  --  str，指定停止词文件路径（一行一个停止词），若为其他类型，则使用默认停止词文件
+        delimiters       --  默认值是`?!;？！。；…\n`，用来将文本拆分为句子。
         
+        Object Var:
+        self.words_no_filter      --  对sentences中每个句子分词而得到的两级列表。
+        self.words_no_stop_words  --  去掉words_no_filter中的停止词而得到的两级列表。
+        self.words_all_filters    --  保留words_no_stop_words中指定词性的单词而得到的两级列表。
+        """
+        self.text = ''
+        self.keywords = None
+        
+        self.seg = Segmentation(stop_words_file=stop_words_file, 
+                                allow_speech_tags=allow_speech_tags, 
+                                delimiters=delimiters)
 
-    def run(self):
-        # text = codecs.open('test.csv', 'r', 'utf-8').read()
-        self.get_keywords_num()      
-        train_data=table2df(self.train_data)
-        train_data=str(train_data)
-        tr4w = TextRank4Keyword()
-        tr4w.analyze(text=train_data, lower=True, window=2)   
-        list1=[]
-        list2=[]
-        list3=[]
-        list4=[]
-        list5=[]
-        list6=[]
-        result=[]
-        for item in tr4w.get_keywords(self.keywords_num*2, word_min_len=2):
-            list1.append([item.word, item.weight])
-            list6.append(item.word)
-        self.keywords_set=list(set(list6))
-#         print('keywords_set:',self.keywords_set)
-            
-#         print(list1)
-        tfidfer = TF_IDF()
-        word_dict,candi_dict=tfidfer.build_wordsdict(train_data)
-        for keyword in tfidfer.extract_keywords(train_data, self.keywords_num*2):
-            list2.append(list(keyword))  
-#         print(list2)
-        for i in range(len(list1)):
-            for j in range(len(list2)):  
-                if list1[i][0] == list2[j][0]:
-                    list3.append(list1[i])                    
-        for i in list1:
-            if i not in list3:
-                list4.append(i)         
-                    
-        length=len(list3)
-        if length>=self.keywords_num:
-            for i in range(self.keywords_num):
-                result.append(list3[i])
+        self.sentences = None
+        self.words_no_filter = None     # 2维列表
+        self.words_no_stop_words = None
+        self.words_all_filters = None
+        
+    def analyze(self, text, 
+                window = 2, 
+                lower = False,
+                vertex_source = 'all_filters',
+                edge_source = 'no_stop_words',
+                pagerank_config = {'alpha': 0.85,}):
+        """分析文本
+
+        Keyword arguments:
+        text       --  文本内容，字符串。
+        window     --  窗口大小，int，用来构造单词之间的边。默认值为2。
+        lower      --  是否将文本转换为小写。默认为False。
+        vertex_source   --  选择使用words_no_filter, words_no_stop_words, words_all_filters中的哪一个来构造pagerank对应的图中的节点。
+                            默认值为`'all_filters'`，可选值为`'no_filter', 'no_stop_words', 'all_filters'`。关键词也来自`vertex_source`。
+        edge_source     --  选择使用words_no_filter, words_no_stop_words, words_all_filters中的哪一个来构造pagerank对应的图中的节点之间的边。
+                            默认值为`'no_stop_words'`，可选值为`'no_filter', 'no_stop_words', 'all_filters'`。边的构造要结合`window`参数。
+        """
+        
+        # self.text = util.as_text(text)
+        self.text = text
+        self.word_index = {}
+        self.index_word = {}
+        self.keywords = []
+        self.graph = None
+        
+        result = self.seg.segment(text=text, lower=lower)
+        self.sentences = result.sentences
+        self.words_no_filter = result.words_no_filter
+        self.words_no_stop_words = result.words_no_stop_words
+        self.words_all_filters   = result.words_all_filters
+
+        util.debug(20*'*')
+        util.debug('self.sentences in TextRank4Keyword:\n', ' || '.join(self.sentences))
+        util.debug('self.words_no_filter in TextRank4Keyword:\n', self.words_no_filter)
+        util.debug('self.words_no_stop_words in TextRank4Keyword:\n', self.words_no_stop_words)
+        util.debug('self.words_all_filters in TextRank4Keyword:\n', self.words_all_filters)
+
+
+        options = ['no_filter', 'no_stop_words', 'all_filters']
+
+        if vertex_source in options:
+            _vertex_source = result['words_'+vertex_source]
         else:
-            result=list3
-            if len(list4)>=self.keywords_num-length:           
-                for i in range(self.keywords_num-length):
-                    list3.append(list4[i])
-                    result=list3
-        result.sort(key= lambda k:k[1],reverse=True)
-        for i in range(len(result)):
-            for word, word_tf in word_dict.items():
-                if result[i][0]==word:
-                    result[i].append(int(word_tf))
-        print('result1：',result)  
-        
-        for i in range(len(result)):
-            list7 = []
-            list7.append(result[i][0])
-#             print('list7:',list7)
-            mapping=list(map(lambda x: self.keywords_set.index(x),list7))
-#             print('mapping:',mapping)
-            result[i][0]=mapping[0]
-        print('result2：',result) 
+            _vertex_source = result['words_all_filters']
 
-        metas =[DiscreteVariable('keywords',self.keywords_set),
-                ContinuousVariable('weight'),
-                 ContinuousVariable('word_frequency')]
-#         print('Domain(metas):',Domain(metas))
-#         listma=[[1,2,3],[4,5,6],[3,5,6]]
-#         print(listma)
-        domain=Domain(metas)
-#         print('domain.attributes:',domain.attributes)
-#         print('domain.class_vars:',domain.class_vars)
-        final_result=Table.from_list(domain,result)
-#         final_result=Table.from_list(Domain(metas),listma)
-        print('final_result:',final_result)
-       
-        self.send('News', final_result)
-        self.send("Metas", metas)
-        
-# if __name__ == '__main__':
-#      s = Text_Extract_Keywords()
-# #     s.train_data = codecs.open('test2.csv', 'r', 'utf-8').read()
-#      s.train_data = Table("test.csv")
-#      s.run() 
+        if edge_source in options:
+            _edge_source   = result['words_'+edge_source]
+        else:
+            _edge_source   = result['words_no_stop_words']
+
+        self.keywords = util.sort_words(_vertex_source, _edge_source, window = window, pagerank_config = pagerank_config)
+
+    def get_keywords(self, num = 6, word_min_len = 1):
+        """获取最重要的num个长度大于等于word_min_len的关键词。
+
+        Return:
+        关键词列表。
+        """
+        result = []
+        count = 0
+        for item in self.keywords:
+            if count >= num:
+                break
+            if len(item.word) >= word_min_len:
+                result.append(item)
+                count += 1
+        return result
+    
+    def get_keyphrases(self, keywords_num = 12, min_occur_num = 2): 
+        """获取关键短语。
+        获取 keywords_num 个关键词构造的可能出现的短语，要求这个短语在原文本中至少出现的次数为min_occur_num。
+
+        Return:
+        关键短语的列表。
+        """
+        keywords_set = set([ item.word for item in self.get_keywords(num=keywords_num, word_min_len = 1)])
+        keyphrases = set()
+        for sentence in self.words_no_filter:
+            one = []
+            for word in sentence:
+                if word in keywords_set:
+                    one.append(word)
+                else:
+                    if len(one) >  1:
+                        keyphrases.add(''.join(one))
+                    if len(one) == 0:
+                        continue
+                    else:
+                        one = []
+            # 兜底
+            if len(one) >  1:
+                keyphrases.add(''.join(one))
+
+        return [phrase for phrase in keyphrases 
+                if self.text.count(phrase) >= min_occur_num]
+
+if __name__ == '__main__':
+    pass
