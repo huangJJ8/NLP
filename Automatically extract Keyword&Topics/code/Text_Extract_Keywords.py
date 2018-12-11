@@ -78,7 +78,7 @@ class Text_Extract_Keywords(LComponent):
         train_data=str(train_data)
         #use Textrank to get the keywords
         tr4w = TextRank4Keyword()
-        tr4w.analyze(text=train_data, lower=True, window=2)   
+        tr4w.analyze(text=train_data, lower=True, window=5)   
         list1=[]
         list2=[]
         list3=[]
