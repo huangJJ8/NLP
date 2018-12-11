@@ -67,8 +67,8 @@ class Text_Extract_Keywords(LComponent):
 
     def get_keywords_num(self):
         # get keywords_num 
-        key_dict = Setting("keywords_num", {"type": "int", "enum": [2, 3, 4, 5,6]})
-        self.keywords_num=key_dict.constraints['enum'][3]
+        key_dict = Setting(5, {"type": "number", "enum": [1,2, 3, 4, 5,6],"minimum": 0, "exclusiveMinimum": True})
+        self.keywords_num=key_dict.default
         
 
     def run(self):
@@ -122,7 +122,7 @@ class Text_Extract_Keywords(LComponent):
             for word, word_tf in word_dict.items():
                 if result[i][0]==word:
                     result[i].append(int(word_tf))
-        print('result1：',result)  
+        # print('result1：',result)  
         
         for i in range(len(result)):
             list7 = []
@@ -131,7 +131,7 @@ class Text_Extract_Keywords(LComponent):
             mapping=list(map(lambda x: self.keywords_set.index(x),list7))
 #             print('mapping:',mapping)
             result[i][0]=mapping[0]
-        print('result2：',result) 
+        # print('result2：',result) 
 
         metas =[DiscreteVariable('keywords',self.keywords_set),
                 ContinuousVariable('weight'),
