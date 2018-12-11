@@ -20,7 +20,8 @@ class TF_IDF():
         candi_words = []
         candi_dict = {}
         for word in pseg.cut(text):
-            if word.flag[0] in ['n', 'v', 'a'] and len(word.word) > 1:
+            if word.flag[0] in ['an', 'i', 'j', 'l', 'n', 'nr', 'nrfg', 'ns', 'nt', 'nz', 't', 'v', 'vd', 'vn', 'eng']  #['n', 'v', 'a']
+            and len(word.word) > 1:
                 candi_words.append(word.word)
             if word.word not in word_dict:
                 word_dict[word.word] = 1
