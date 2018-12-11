@@ -76,6 +76,7 @@ class Text_Extract_Keywords(LComponent):
         self.get_keywords_num()      
         train_data=table2df(self.train_data)
         train_data=str(train_data)
+        #use Textrank to get the keywords
         tr4w = TextRank4Keyword()
         tr4w.analyze(text=train_data, lower=True, window=2)   
         list1=[]
@@ -89,9 +90,10 @@ class Text_Extract_Keywords(LComponent):
             list1.append([item.word, item.weight])
             list6.append(item.word)
         self.keywords_set=list(set(list6))
-#         print('keywords_set:',self.keywords_set)
-            
+#         print('keywords_set:',self.keywords_set)         
 #         print(list1)
+        
+        #use TF_IDF to get the keywords
         tfidfer = TF_IDF()
         word_dict,candi_dict=tfidfer.build_wordsdict(train_data)
         for keyword in tfidfer.extract_keywords(train_data, self.keywords_num*2):
@@ -146,4 +148,3 @@ class Text_Extract_Keywords(LComponent):
        
         self.send('News', final_result)
         self.send("Metas", metas)
-        
