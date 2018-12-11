@@ -5,7 +5,7 @@ solution = Solution()
 
 params = {
     'train_input':{
-        'datapath': 'test.csv'
+        'datapath': 'test_CN.csv'
     },
     'keywords':{
 
