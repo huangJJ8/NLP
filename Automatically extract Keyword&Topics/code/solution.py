@@ -12,7 +12,7 @@ class Solution(SolutionBase):
         reader1.set_title("train_input")
 
         Text_Extract_Keywords = self.myscheme.new_node('Text_Extract_Keywords.Text_Extract_Keywords')
-        Text_Extract_Keywords.set_title('fasttext')
+        Text_Extract_Keywords.set_title('textrank')
         outputwriter = self.myscheme.new_node("mlstudiosdk.modules.components.io.writer.Writer")
         outputwriter.set_title("output")
         eva_visualization = self.myscheme.new_node(
