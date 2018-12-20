@@ -56,6 +56,8 @@ class Text_Extract_Keywords(LComponent):
         ("Metric Score", MetricFrame),
         ("Metric", MetricType)
     ]
+    n_keywords = Setting(5, {"type": "integer", "minimum": 0, "exclusiveMinimum": True})
+
 
     def __init__(self):
         super().__init__()
@@ -67,15 +69,24 @@ class Text_Extract_Keywords(LComponent):
 
     def get_keywords_num(self):
         # get keywords_num 
-        key_dict = Setting(5, {"type": "number", "enum": [1,2, 3, 4, 5,6],"minimum": 0, "exclusiveMinimum": True})
-        self.keywords_num=key_dict.default
+        #key_dict = Setting(5, {"type": "number", "enum": [1,2, 3, 4, 5,6],"minimum": 0, "exclusiveMinimum": True})
+        #self.keywords_num=key_dict.default
+        self.keywords_num = self.n_keywords
         
 
     def run(self):
         # text = codecs.open('test.csv', 'r', 'utf-8').read()
         self.get_keywords_num()      
         train_data=table2df(self.train_data)
-        train_data=str(train_data)
+        if train_data.index.size == 0:
+            raise AttributesError_new("Missing data, the input dataset should have two rows and one column "
+                              "(the first row is column name,  the second row is the single text.)")
+        elif train_data.columns.size > 1:
+            raise AttributesError_new("Input data should have only one column")
+        elif train_data.index.size > 1:
+            raise AttributesError_new("The single text should be filled into one row")
+        """ use 1 col and 1 row data """
+        train_data = str(train_data.values[0][0])
         #use Textrank to get the keywords
         tr4w = TextRank4Keyword()
         tr4w.analyze(text=train_data, lower=True, window=5)   
