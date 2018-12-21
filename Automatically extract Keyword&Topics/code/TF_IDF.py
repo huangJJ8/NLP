@@ -9,6 +9,7 @@ import codecs
 import csv
 import os
 import jieba.posseg as pseg
+import jieba
 
 class TF_IDF():
     def __init__(self):
@@ -36,6 +37,21 @@ class TF_IDF():
                 continue
 
         return word_dict,candi_dict
+
+
+    def build_wordsdict1(self, text):
+        word_dict1 = {}
+        candi_words = []
+        candi_dict = {}
+        text=text.lower()
+        for word in jieba.cut(text):
+            if len(word) > 1:
+                candi_words.append(word)
+            if word not in word_dict1:
+                word_dict1[word] = 1
+            else:
+                word_dict1[word] += 1
+        return word_dict1
 
     def extract_keywords(self, text, num_keywords):
         keywords_dict = {}
