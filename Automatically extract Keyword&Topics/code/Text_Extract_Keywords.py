@@ -107,6 +107,7 @@ class Text_Extract_Keywords(LComponent):
         #use TF_IDF to get the keywords
         tfidfer = TF_IDF()
         word_dict,candi_dict=tfidfer.build_wordsdict(train_data)
+        word_dict1=tfidfer.build_wordsdict1(train_data)
         for keyword in tfidfer.extract_keywords(train_data, self.keywords_num*2):
             list2.append(list(keyword))  
 #         print(list2)
@@ -130,7 +131,7 @@ class Text_Extract_Keywords(LComponent):
                     result=list3
         result.sort(key= lambda k:k[1],reverse=True)
         for i in range(len(result)):
-            for word, word_tf in word_dict.items():
+            for word, word_tf in word_dict1.items():
                 if result[i][0]==word:
                     result[i].append(int(word_tf))
         # print('result1：',result)  
