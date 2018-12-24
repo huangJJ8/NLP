@@ -24,7 +24,7 @@ import codecs
 import os
 import re
 
-import util
+import util  #modify the code for test
 #import mlstudiosdk.modules.components.nlp.Text_Extract_Keywords_Util as util
 warnings.filterwarnings('ignore')
 
@@ -34,7 +34,8 @@ def get_mlstudiosdk_path():
 
 
 def get_dataset_path(name):
-    dataset_path =os.path.join('/mnt/data/input/TextRank_Summary',name)
+    #modify the code for test
+    dataset_path =os.path.join('/mnt/data/input/TextRank_Summary',name) 
     #os.path.join(get_mlstudiosdk_path(), 'dataset', 'dataset_for_nlp',"Keyword_Extraction",name)
     return dataset_path
 
