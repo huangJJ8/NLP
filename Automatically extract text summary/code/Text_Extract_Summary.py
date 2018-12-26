@@ -313,6 +313,7 @@ class Text_Extract_Summary(LComponent):
         list4.sort(key= lambda k:k[0],reverse=False)
         list6.append(['50%',list4[0][2]+list4[1][2]+list4[2][2]+list4[3][2]])
         list5.append(list4[0][2]+list4[1][2]+list4[2][2]+list4[3][2])
+        self.abstract_set=list5
 #         print('list5',list5)   
 #         print('list6',list6)   
         for i in range(len(list6)):
@@ -322,7 +323,7 @@ class Text_Extract_Summary(LComponent):
             list8.append(list6[i][1])
            
             mapping1=list(map(lambda x: self.proportion_set.index(x),list7))
-            mapping2=list(map(lambda x: list5.index(x),list8))
+            mapping2=list(map(lambda x: self.abstract_set.index(x),list8))
 #             print('mapping1',mapping1[0])
 #             print('mapping2',mapping2[0])
             result.append([mapping1[0],mapping2[0]])
@@ -330,7 +331,7 @@ class Text_Extract_Summary(LComponent):
 #         print('result:',result)     
         
         metas = [DiscreteVariable('proportion',self.proportion_set),
-                 DiscreteVariable('abstract',list5)]
+                 DiscreteVariable('abstract',self.abstract_set)]
 
         domain = Domain(metas)
         #         print('domain.attributes:',domain.attributes)
@@ -338,3 +339,26 @@ class Text_Extract_Summary(LComponent):
         final_result = Table.from_list(domain, result)
         self.send('News', final_result)
         self.send("Metas", metas)
+     
+#         print('result:',result)
+#         print('final_result:',final_result)
+        json_res = {}
+        temp_lst = []
+        fields = ['proportion', 'abstract']
+        for i in result:
+            temp_dir = {}
+            for j, k in enumerate(i):
+                if j == 0:
+                    temp_dir[fields[j]] = self.proportion_set[k]
+                else:
+                    temp_dir[fields[j]] = self.abstract_set[k]
+            temp_lst.insert(0, temp_dir)
+        json_res['visualization_type'] = "summary"
+        json_res['results'] = temp_lst
+
+        json_res["chartXName"] = 'proportion'
+        json_res["chartYName"] = 'abstract'
+#         json_res["tableCols"] = ['name', 'count']
+
+#         print('json_res:',json_res)
+        self.send('Jsondata', json_res)
